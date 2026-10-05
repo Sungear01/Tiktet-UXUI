@@ -1,0 +1,318 @@
+/* =====================================================================
+   Landy Home Ticket - Dashboard (ticket_head/Dashboard.php)
+   ใช้สีเดิมของหน้านี้เอง (แดง #ed1b24, ฟ้า #0d6efd, เขียว/แดง on-time #4CAF50/#f44336)
+   ไม่ดึงสีจาก tokens.css เพื่อไม่ให้มี "แดง" สองเฉดต่างกันในหน้าเดียว
+   ===================================================================== */
+.lh-dashboard {
+  --dash-red: #ed1b24;
+  --dash-red-dark: #c81319;
+  --dash-blue: #0d6efd;
+  --dash-dark: #212529;
+  --dash-green: #4CAF50;
+  --dash-amber: #f59f00;
+  --dash-surface: #ffffff;
+  --dash-track: #eef0f2;
+}
+
+/* ---------- แถบตัวกรอง: ให้ label โดดขึ้นมานิดหน่อย ---------- */
+.lh-dashboard .form-label { font-weight: 600; color: #495057; font-size: .85rem; margin-bottom: 4px; }
+.lh-dashboard .form-select:focus { border-color: var(--dash-red); box-shadow: 0 0 0 .2rem rgba(237, 27, 36, .15); }
+
+/* ---------- Segmented control (แทนแถวปุ่มเดิม) พร้อมแถบเลื่อน ---------- */
+.lh-seg {
+  position: relative;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 5px;
+  background: var(--dash-track);
+  border-radius: 14px;
+  isolation: isolate;
+}
+.lh-seg-thumb {
+  position: absolute;
+  top: 5px; left: 0; bottom: 5px;
+  width: 0;
+  background: var(--dash-surface);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+  transition: transform .28s cubic-bezier(.4, 0, .2, 1), width .28s cubic-bezier(.4, 0, .2, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) { .lh-seg-thumb { transition: none; } }
+.lh-seg-btn {
+  position: relative;
+  z-index: 1;
+  border-radius: 10px !important;
+  border: none !important;
+  background: transparent !important;
+  color: #495057 !important;
+  font-weight: 600;
+  padding: 9px 16px !important;
+  transition: color .2s ease;
+}
+.lh-seg-btn.btn-landy-red { color: var(--dash-red) !important; }
+.lh-seg-btn:hover { color: var(--dash-red) !important; }
+.lh-seg-btn:focus-visible { outline: 3px solid var(--dash-blue); outline-offset: 2px; }
+
+/* ---------- แถว KPI ---------- */
+.lh-kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 20px 0;
+}
+@media (max-width: 991.98px) { .lh-kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+.lh-kpi-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--dash-surface);
+  border: 1px solid #e9ecef;
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .04);
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.lh-kpi-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 0, 0, .08); }
+
+.lh-kpi-icon {
+  flex-shrink: 0;
+  width: 46px; height: 46px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 12px;
+  font-size: 1.3rem;
+}
+.lh-kpi-icon--total     { background: #fde3e3; color: var(--dash-red); }
+.lh-kpi-icon--progress  { background: #dbeafe; color: var(--dash-blue); }
+.lh-kpi-icon--closed    { background: #eef0f2; color: var(--dash-dark); }
+.lh-kpi-icon--ontime    { background: #e6f6e7; color: var(--dash-green); }
+
+.lh-kpi-body { min-width: 0; }
+.lh-kpi-label { font-size: .8rem; color: #868e96; font-weight: 500; }
+.lh-kpi-value {
+  font-size: 1.65rem; font-weight: 700; color: var(--dash-dark);
+  line-height: 1.2; font-variant-numeric: proportional-nums;
+}
+.lh-kpi-delta { font-size: .78rem; font-weight: 600; display: inline-flex; align-items: center; gap: 2px; }
+.lh-kpi-delta.is-up { color: var(--dash-red); }
+.lh-kpi-delta.is-down { color: var(--dash-green); }
+.lh-kpi-delta.is-flat { color: #adb5bd; }
+
+/* ---------- วงแหวนตรงเวลา (CSS conic-gradient - ไม่ต้องพึ่งไลบรารีเพิ่ม) ---------- */
+.lh-kpi-ring {
+  --pct: 0;
+  flex-shrink: 0;
+  width: 46px; height: 46px;
+  border-radius: 50%;
+  background: conic-gradient(var(--dash-green) calc(var(--pct) * 1%), var(--dash-track) 0);
+  display: flex; align-items: center; justify-content: center;
+  transition: background 1s cubic-bezier(.4, 0, .2, 1);
+}
+@media (prefers-reduced-motion: reduce) { .lh-kpi-ring { transition: none; } }
+.lh-kpi-ring::after {
+  content: '';
+  width: 32px; height: 32px;
+  background: var(--dash-surface);
+  border-radius: 50%;
+}
+
+/* ---------- entrance animation ตอนสลับแท็บ (ไม่แตะ logic เดิม - ผูกผ่าน MutationObserver) ---------- */
+.lh-dash-fade { animation: lh-dash-fade-in .35s ease-out; }
+@keyframes lh-dash-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .lh-dash-fade { animation: none; } }
+
+/* ---------- การ์ดกราฟ: ทำให้พื้นหลังกราฟไม่ว่างเปล่าทื่อๆ ---------- */
+.lh-dashboard .chart-wrapper {
+  background: linear-gradient(180deg, #fbfbfc 0%, #ffffff 60%);
+  border-radius: 12px;
+}
+.lh-dashboard [aria-busy="true"] .lh-kpi-value { opacity: .55; }
+
+/* ---------- การ์ดที่ครอบกราฟทั้งใบ: ยกให้ดูเด่น ไม่จมกับพื้นหลัง ---------- */
+#check-graph-area .card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .05);
+}
+#check-graph-area .card h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--dash-dark, #212529);
+  margin-bottom: .5rem;
+}
+
+/* ---------- ตัวอักษรรอง: เดิม #adb5bd / #868e96 คอนทราสต์ต่ำกว่า 4.5:1 บนพื้นขาว → ใช้ #6c757d (4.7:1) ---------- */
+.lh-kpi-label { color: #6c757d; }
+.lh-kpi-delta.is-flat { color: #6c757d; }
+
+/* ---------- มือถือ (< 576px) ---------- */
+@media (max-width: 575.98px) {
+  /* กรอบนอก: Bootstrap p-4 (24px) กินพื้นที่จอเล็ก */
+  .lh-dashboard > .card { padding: 14px !important; }
+  /* ช่องเลือก: สูง 44px แตะง่าย + 16px กัน iOS ซูมหน้าเอง */
+  .lh-dashboard .form-select { min-height: 44px; font-size: 16px; }
+
+  /* แท็บ 4 ปุ่ม: แบ่ง 2×2 เท่ากัน (เดิมขึ้นบรรทัดใหม่แล้วแถบขาวเลื่อนผิดตำแหน่ง)
+     ไม่ใช้แถบเลื่อน (thumb) บนมือถือ ให้ปุ่มที่เลือกมีพื้นขาวของตัวเองแทน */
+  .lh-seg { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; width: 100%; }
+  .lh-seg-thumb { display: none; }
+  .lh-seg-btn {
+    min-height: 44px; padding: 8px 6px !important;
+    font-size: .9rem; line-height: 1.25; white-space: normal;
+  }
+  .lh-seg-btn.btn-landy-red {
+    background: var(--dash-surface) !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+  }
+
+  /* การ์ด KPI: ไอคอนอยู่บน ตัวเลขอยู่ล่าง ใช้ความกว้างเต็มการ์ด (เดิมข้อความหักทีละคำ) */
+  .lh-kpi-row { gap: 10px; margin: 14px 0; }
+  .lh-kpi-card { flex-direction: column; align-items: flex-start; gap: 10px; padding: 14px; }
+  .lh-kpi-card:hover { transform: none; }
+  .lh-kpi-body { width: 100%; }
+  .lh-kpi-icon, .lh-kpi-ring { width: 40px; height: 40px; font-size: 1.15rem; }
+  .lh-kpi-ring::after { width: 28px; height: 28px; }
+  .lh-kpi-label { font-size: .85rem; line-height: 1.3; }
+  .lh-kpi-value { font-size: 1.6rem; white-space: nowrap; }
+  .lh-kpi-delta { flex-wrap: wrap; column-gap: 4px; line-height: 1.4; }
+}
+
+/* =====================================================================
+   การ์ดกราฟ Dashboard IT (Organism: .lh-chart-card)
+   หัวการ์ดวางลำดับตาม Serial Position Effect: ชื่อกราฟ → ตัวเลขสรุป →
+   ปุ่มสลับมุมมอง ผู้ใช้จึงรู้ "ภาพรวม" ก่อนลงไปอ่านรายละเอียดในกราฟ
+   ===================================================================== */
+.lh-chart-card { border-radius: 16px; }
+
+.lh-chart-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding-bottom: 14px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #f1f3f5;
+  text-align: left;
+}
+.lh-chart-titles { min-width: 0; flex: 1 1 220px; }
+#check-graph-area .lh-chart-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--dash-dark);
+  margin: 0 0 2px;
+  line-height: 1.3;
+}
+.lh-chart-sub { margin: 0; font-size: .8rem; color: #6c757d; line-height: 1.4; }
+
+.lh-chart-stats { display: flex; align-items: stretch; gap: 10px; flex-wrap: wrap; }
+.lh-chart-stat { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+.lh-chart-stat-label {
+  font-size: .72rem; color: #6c757d; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 5px; line-height: 1.3;
+}
+.lh-chart-stat-val {
+  font-size: 1.45rem; font-weight: 700; color: var(--dash-dark);
+  line-height: 1.25; font-variant-numeric: tabular-nums;
+}
+.lh-chart-stat-sub { font-size: .76rem; color: #6c757d; line-height: 1.3; }
+
+/* เรื่องที่แจ้งมากที่สุด = ข้อมูลชิ้นเดียวที่ต้องสะดุดตา จึงเป็นชิ้นเดียวที่มีพื้นสี (Von Restorff Effect)
+   #1d4ed8 บนพื้น #eff6ff = 6.3:1 ผ่าน WCAG AA */
+.lh-chart-stat--top {
+  background: var(--lh-info-50, #eff6ff);
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 8px 14px;
+  max-width: 260px;
+}
+.lh-chart-stat--top .lh-chart-stat-label { color: #1d4ed8; }
+.lh-chart-stat--top .lh-chart-stat-val {
+  font-size: 1rem; color: #1d4ed8;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ปุ่มสลับมุมมอง: ทรงเดียวกับ segmented control ของตัวกรองด้านบน (Repetition) */
+.lh-chart-modes {
+  display: inline-flex; gap: 4px; padding: 4px;
+  background: var(--dash-track); border-radius: 12px; align-self: center;
+}
+.lh-chart-mode {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 36px; padding: 0 14px;
+  border: none; border-radius: 9px; background: transparent;
+  color: #495057; font-size: .85rem; font-weight: 500; white-space: nowrap;
+  transition: background-color .18s ease, color .18s ease, box-shadow .18s ease;
+}
+.lh-chart-mode:hover:not(:disabled) { color: var(--dash-blue); }
+.lh-chart-mode.is-active {
+  background: var(--dash-surface); color: var(--dash-blue);
+  font-weight: 600; box-shadow: 0 2px 8px rgba(0, 0, 0, .1);
+}
+.lh-chart-mode:disabled { opacity: .45; cursor: not-allowed; }
+.lh-chart-mode:focus-visible { outline: 3px solid var(--dash-blue); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .lh-chart-mode { transition: none; } }
+
+/* สถานะว่าง: บอกด้วยว่า "ทำอะไรต่อ" ไม่ใช่แค่บอกว่าไม่มีข้อมูล */
+.lh-chart-empty {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; text-align: center; padding: 20px;
+}
+.lh-chart-empty[hidden] { display: none; }
+.lh-chart-empty i { font-size: 2.2rem; color: #ced4da; margin-bottom: 6px; }
+.lh-chart-empty-title { margin: 0; font-size: .95rem; font-weight: 600; color: #495057; }
+.lh-chart-empty-hint { margin: 0; font-size: .82rem; color: #6c757d; }
+
+@media (max-width: 767.98px) {
+  .lh-chart-head { gap: 12px; }
+  .lh-chart-stats { width: 100%; }
+  .lh-chart-stat--top { flex: 1 1 auto; max-width: none; }
+  .lh-chart-modes { width: 100%; }
+  /* 44px = ขนาดเป้าหมายที่นิ้วแตะพลาดยาก (Fitts's Law) */
+  .lh-chart-mode { flex: 1; justify-content: center; min-height: 44px; padding: 0 8px; }
+}
+
+/* ---------- คะแนนประเมิน (แท็บ "คะแนนประเมินงาน"): รายการรายข้อสำหรับมือถือ ---------- */
+.lh-score-list { display: none; }   /* เดสก์ท็อปใช้ตารางแนวนอนเดิม */
+.lh-score-list ol { list-style: none; margin: 0; padding: 0; }
+.lh-score-list-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 8px 12px; background: #f1f3f5; border: 1px solid #e9ecef; border-radius: 10px 10px 0 0;
+  font-weight: 600; color: var(--dash-dark); font-size: .9rem;
+}
+.lh-score-list ol { border: 1px solid #e9ecef; border-top: 0; border-radius: 0 0 10px 10px; background: var(--dash-surface); }
+.lh-score-list li {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 12px; border-bottom: 1px solid #f1f3f5;
+}
+.lh-score-list li:last-child { border-bottom: 0; }
+.lh-score-no {
+  flex: none; width: 24px; height: 24px; display: inline-grid; place-items: center;
+  border-radius: 50%; background: #f1f3f5; color: #495057; font-size: .8rem; font-weight: 600;
+}
+.lh-score-q { flex: 1 1 auto; min-width: 0; color: #343a40; font-size: .9rem; line-height: 1.4; text-align: left; overflow-wrap: anywhere; }
+.lh-score-val {
+  flex: none; min-width: 40px; padding: 1px 10px; text-align: center; border-radius: 999px;
+  font-weight: 700; font-variant-numeric: tabular-nums; background: #eef0f2; color: #495057;
+}
+.lh-score-val--good { background: #e6f6e7; color: #2e7d32; }
+.lh-score-val--low  { background: #fde3e3; color: var(--dash-red-dark); }
+.lh-score-val--none { background: transparent; color: #6c757d; font-weight: 400; }
+
+@media (max-width: 767.98px) {
+  /* ช่อง "คะแนนประเมิน" ในการ์ด: ป้ายอยู่บน เนื้อหากว้างเต็มการ์ด (เดิมถูกบีบไว้ข้างป้าย) */
+  .lh-dashboard table.lh-stack > tbody > tr > td:has(> .score-wrap) {
+    flex-direction: column; align-items: stretch; text-align: left !important;
+  }
+  .lh-dashboard .score-wrap { overflow: visible; }
+  .lh-dashboard .score-wrap .table-score-wide,
+  .lh-dashboard .score-wrap .lh-score-avg-line { display: none; }
+  .lh-dashboard .score-wrap .lh-score-list { display: block; }
+}

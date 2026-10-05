@@ -1,0 +1,376 @@
+/* =====================================================================
+   Landy Home Ticket - App Navigation
+   มือถือ  : app bar (บน) + tab bar (ล่าง) + ลิ้นชักเมนู (<dialog>)
+   Desktop : sidebar คอลัมน์ซ้าย
+   ไม่พึ่ง Bootstrap → ใช้ได้ทั้งหน้า BS5 และหน้าที่ยังปน BS4
+   โหลดหลัง tokens.css (includes/layout/app_nav.php โหลดให้เอง)
+   ===================================================================== */
+
+.lh-appbar,
+.lh-sidebar,
+.lh-drawer {
+  --lh-nav-bg: var(--lh-sidebar, #18181b);
+  --lh-nav-fg: #f4f4f5;                  /* 16:1 บนพื้น */
+  --lh-nav-muted: #a1a1aa;               /* 7:1 บนพื้น */
+  --lh-nav-hover: rgba(255, 255, 255, .08);
+  --lh-nav-focus: #93c5fd;
+  font-family: var(--lh-font, 'Kanit', system-ui, sans-serif);
+}
+
+.lh-mnav { display: contents; }                 /* ไม่สร้างกล่อง → ไม่โดน .row > * ของ Bootstrap */
+.lh-lock, .lh-lock body { overflow: hidden; }   /* ล็อก scroll ตอนลิ้นชักเปิด */
+
+.lh-sr {
+  position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* ---------------------------------------------------------------------
+   รายการเมนู (ใช้ทั้ง sidebar และลิ้นชัก)
+   --------------------------------------------------------------------- */
+.lh-nav-section + .lh-nav-section { margin-top: var(--lh-space-3, 16px); }
+
+.lh-nav-heading {
+  padding: 0 var(--lh-space-3, 16px) var(--lh-space-1, 4px);
+  font-size: .75rem; font-weight: 600; letter-spacing: .03em;
+  color: var(--lh-nav-muted);
+}
+
+.lh-nav-list {
+  list-style: none; margin: 0; padding: 0;
+  display: flex; flex-direction: column; gap: 2px;
+}
+
+.lh-nav-link {
+  display: flex; align-items: center; gap: 12px;
+  min-height: 44px;                                  /* touch target */
+  padding: var(--lh-space-2, 8px) var(--lh-space-3, 16px);
+  border-radius: var(--lh-radius, 10px);
+  color: var(--lh-nav-fg) !important;
+  text-decoration: none !important;
+  font-size: .95rem; line-height: 1.35;
+}
+.lh-nav-link i { flex-shrink: 0; width: 22px; font-size: 1.15rem; text-align: center; }
+.lh-nav-label { flex: 1; min-width: 0; overflow-wrap: anywhere; } /* ชื่อยาวขึ้นบรรทัดใหม่ ไม่ล้น */
+.lh-nav-link:hover { background: var(--lh-nav-hover); }
+.lh-nav-link.is-active { background: var(--lh-brand-600, #d62828); color: #fff !important; font-weight: 600; }
+.lh-nav-link.is-danger { color: #fca5a5 !important; }
+
+.lh-nav-count {
+  flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center;
+  min-width: 24px; height: 22px; padding: 0 8px; border-radius: 999px;
+  background: rgba(255, 255, 255, .14); color: #fff;
+  font-size: .75rem; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.lh-nav-count[style] { display: inline-flex !important; } /* ticket_head/index.php ตั้ง style.display='inline' ให้ .count-index */
+.lh-nav-count.is-zero { opacity: .5; }
+.lh-nav-count.is-urgent { background: var(--lh-brand-600, #d62828); }
+.lh-nav-link.is-active .lh-nav-count { background: rgba(255, 255, 255, .28); opacity: 1; }
+
+/* โปรไฟล์ */
+.lh-nav-profile {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: var(--lh-space-3, 16px);
+  padding: var(--lh-space-2, 8px) var(--lh-space-3, 16px);
+  border-radius: var(--lh-radius, 10px);
+  color: var(--lh-nav-fg) !important; text-decoration: none !important;
+}
+.lh-nav-profile:hover { background: var(--lh-nav-hover); }
+.lh-nav-profile.is-active { box-shadow: inset 0 0 0 2px var(--lh-brand-600, #d62828); }
+.lh-nav-avatar { flex-shrink: 0; width: 40px; height: 40px; border-radius: 50%; object-fit: cover; background: #fff; }
+.lh-nav-profile-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.lh-nav-profile-name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lh-nav-profile-sub { font-size: .8rem; color: var(--lh-nav-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* focus ที่มองเห็นได้บนพื้นเข้ม */
+.lh-nav-link:focus-visible,
+.lh-nav-profile:focus-visible,
+.lh-icon-btn:focus-visible,
+.lh-appbar a:focus-visible {
+  outline: 3px solid var(--lh-nav-focus); outline-offset: 2px;
+}
+
+/* =====================================================================
+   เกณฑ์ตัดสินว่าจะใช้เมนูแบบไหน (นิยามที่เดียว ใช้คู่กันทั้งไฟล์)
+
+     sidebar   : (min-width: 1024.02px) and (pointer: fine)
+     appbar+tab: (max-width: 1024px), (pointer: coarse)
+
+   สองเงื่อนไขนี้เป็นส่วนเติมเต็มกันพอดี จะไม่มีจอไหนได้ทั้งคู่หรือไม่ได้เลย
+
+   ทำไมต้องมี pointer: coarse ด้วย ไม่ใช้แค่ความกว้าง
+     iPad วัดตามความกว้างอย่างเดียวไม่พอ เพราะแนวนอนกว้าง 1180-1366px
+     ชนกับโน้ตบุ๊ก 1366x768 ถ้าตัดด้วยความกว้างอย่างเดียวจะพลอยซ่อน sidebar
+     บนโน้ตบุ๊กไปด้วย pointer: coarse = อุปกรณ์ที่ใช้นิ้วเป็นตัวชี้หลัก
+     จึงจับ iPad/แท็บเล็ตได้ครบทุกรุ่นทุกการหมุนจอ โดยไม่แตะเครื่องที่ใช้เมาส์
+     (โน้ตบุ๊กจอสัมผัสรายงานเป็น fine เพราะตัวชี้หลักคือทัชแพด จึงยังได้ sidebar)
+
+   เบราว์เซอร์เก่าที่ไม่รู้จัก pointer จะตกไปใช้ appbar+tabbar ซึ่งใช้งานได้ทุกจอ
+   ===================================================================== */
+
+/* ---------------------------------------------------------------------
+   Desktop sidebar
+   --------------------------------------------------------------------- */
+.lh-sidebar { display: none; background: var(--lh-nav-bg); color: var(--lh-nav-fg); min-height: 100vh; }
+
+/* เขียนเป็น 2 กฎซ้อนกัน ไม่ใช่ and (pointer: fine) กฎเดียว
+   เพราะถ้าเบราว์เซอร์ไม่รู้จัก pointer กฎที่มี and จะพังทั้งกฎ จอกว้างจะไม่ได้ sidebar
+   และ appbar ก็ไม่ขึ้นเพราะ (max-width: 1024px) ก็ไม่ผ่าน -> ไม่มีเมนูให้ใช้เลย
+   แยกเป็นจอกว้าง = แสดง แล้วค่อยให้จอสัมผัสมาซ่อนทับ เบราว์เซอร์เก่าจึงยังได้ sidebar */
+@media (min-width: 1024.02px) { .lh-sidebar { display: block; } }
+@media (pointer: coarse)      { .lh-sidebar { display: none; } }
+.lh-sidebar-inner {
+  position: sticky; top: 0;
+  max-height: 100vh; overflow-y: auto;       /* เมนูยาวเลื่อนในตัวเองได้ */
+  padding: var(--lh-space-4, 24px) var(--lh-space-2, 8px);
+}
+
+/* ---------------------------------------------------------------------
+   มือถือ: app bar + tab bar
+   --------------------------------------------------------------------- */
+.lh-appbar,
+.lh-tabbar { display: none; }
+
+@media (max-width: 1024px), (pointer: coarse) {
+  /* ความสูงของ appbar ที่ลอยติดขอบบน หน้าไหนมี element แบบ position:sticky; top:0
+     ต้องเขียน top: var(--lh-appbar-h, 0px) ไม่งั้นจะมุดหายไปใต้ appbar
+     (นอกโหมดนี้ตัวแปรเป็น 0 ค่าจึงไม่เปลี่ยนพฤติกรรมเดิมบนเดสก์ท็อป) */
+  :root { --lh-appbar-h: calc(56px + env(safe-area-inset-top, 0px)); }
+
+  body {
+    padding-top: calc(56px + env(safe-area-inset-top, 0px)) !important;
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .lh-appbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1030;
+    display: flex; align-items: center; gap: var(--lh-space-3, 16px);
+    height: calc(56px + env(safe-area-inset-top, 0px));
+    padding: env(safe-area-inset-top, 0px) var(--lh-space-3, 16px) 0;
+    background: var(--lh-nav-bg); color: var(--lh-nav-fg);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .06);
+  }
+  .lh-appbar-home,
+  .lh-appbar-avatar { flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+  .lh-appbar-home img { border-radius: 6px; }
+  .lh-appbar-avatar img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #fff; }
+  .lh-appbar-title {
+    flex: 1; min-width: 0;
+    font-size: 1.05rem; font-weight: 600;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+
+  .lh-tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 1030;
+    display: grid; grid-auto-flow: column; grid-auto-columns: 1fr;
+    height: calc(64px + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: #fff;
+    border-top: 1px solid var(--lh-gray-200, #e5e7eb);
+    box-shadow: 0 -4px 16px rgba(17, 24, 39, .06);
+    font-family: var(--lh-font, 'Kanit', system-ui, sans-serif);
+  }
+
+  .lh-tab {
+    appearance: none; -webkit-appearance: none; border: 0; background: transparent; margin: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    min-width: 0; padding: 6px 2px;
+    color: var(--lh-gray-500, #6b7280) !important;    /* 4.8:1 บนขาว */
+    text-decoration: none !important;
+    font: inherit; font-size: .7rem; font-weight: 500; line-height: 1.2;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .lh-tab:focus-visible { outline: 3px solid var(--lh-focus, #2563eb); outline-offset: -3px; border-radius: 12px; }
+
+  /* ไอคอนอยู่ใน "pill" ขนาดคงที่ → ตอน active เปลี่ยนแค่พื้น ไม่ขยับ layout */
+  .lh-tab-icon {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+    width: 56px; height: 30px; border-radius: 999px;
+  }
+  .lh-tab-icon i { font-size: 1.3rem; line-height: 1; }
+  .lh-tab-label { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .lh-tab.is-active { color: var(--lh-brand-700, #a61c1c) !important; font-weight: 600; }   /* 7.5:1 */
+  .lh-tab.is-active .lh-tab-icon { background: var(--lh-brand-50, #fef2f2); }
+
+  .lh-tab.is-primary .lh-tab-icon { background: var(--lh-brand-600, #d62828); color: #fff; }
+  .lh-tab.is-primary.is-active .lh-tab-icon { background: var(--lh-brand-700, #a61c1c); }
+
+  .lh-tab-badge {
+    position: absolute; top: -4px; left: calc(50% + 6px);
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+    background: var(--lh-brand-600, #d62828); color: #fff;
+    border: 2px solid #fff;
+    font-size: .65rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   ลิ้นชักเมนู (<dialog>)
+   --------------------------------------------------------------------- */
+.lh-drawer {
+  position: fixed; top: 0; bottom: 0; left: 0; right: auto;
+  width: min(320px, 88vw); max-width: none;
+  height: 100%; max-height: none;
+  margin: 0; padding: 0; border: 0;
+  background: var(--lh-nav-bg); color: var(--lh-nav-fg);
+  box-shadow: 8px 0 32px rgba(0, 0, 0, .35);
+}
+.lh-drawer:not([open]) { display: none; }
+.lh-drawer[open] { display: flex; animation: lh-drawer-in .22s ease-out; }
+.lh-drawer::backdrop { background: rgba(0, 0, 0, .5); }
+
+.lh-drawer-panel {
+  display: flex; flex-direction: column; width: 100%; height: 100%;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.lh-drawer-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--lh-space-2, 8px) var(--lh-space-2, 8px) var(--lh-space-2, 8px) var(--lh-space-3, 16px);
+}
+.lh-drawer-title { margin: 0; font-size: 1.1rem; font-weight: 600; color: #fff; font-family: inherit; }
+.lh-drawer-body {
+  flex: 1; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+  padding: 0 var(--lh-space-2, 8px) var(--lh-space-3, 16px);
+}
+.lh-drawer-foot { padding: var(--lh-space-2, 8px); border-top: 1px solid rgba(255, 255, 255, .1); }
+
+.lh-icon-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px; border: 0; border-radius: 999px;
+  background: transparent; color: inherit; font-size: 1.2rem;
+}
+.lh-icon-btn:hover { background: var(--lh-nav-hover); }
+
+@keyframes lh-drawer-in {
+  from { transform: translateX(-100%); }
+  to   { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lh-drawer[open] { animation: none; }
+}
+
+/* =====================================================================
+   Sidebar polish (แดง / ดำ / ขาว) — จัดระเบียบ: แบรนด์ → โปรไฟล์ → เมนู → ออกจากระบบ
+   ===================================================================== */
+.lh-sidebar,
+.lh-drawer {
+  --lh-nav-bg: #141414;
+  --lh-nav-muted: #9a9a9a;               /* 6.9:1 บนพื้น */
+  --lh-nav-icon: #b5b5b5;
+  --lh-nav-hover: rgba(255, 255, 255, .06);
+  --lh-nav-line: rgba(255, 255, 255, .08);
+}
+
+.lh-sidebar {
+  background:
+    radial-gradient(360px circle at 0 0, rgba(214, 40, 40, .16), transparent 70%),
+    var(--lh-nav-bg);
+  border-right: 1px solid var(--lh-nav-line);
+}
+
+/* โครง: หัว/ท้ายคงที่ เมนูตรงกลางเลื่อนได้ */
+.lh-sidebar-inner {
+  display: flex; flex-direction: column;
+  height: 100vh; max-height: 100vh; overflow: hidden;
+  padding: 20px 12px 12px;
+}
+.lh-sidebar-nav {
+  flex: 1; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain;
+  margin: 0 -4px; padding: 0 4px 8px;
+  scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, .15) transparent;
+}
+.lh-sidebar-nav::-webkit-scrollbar { width: 6px; }
+.lh-sidebar-nav::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .15); border-radius: 3px; }
+.lh-sidebar-nav::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, .3); }
+.lh-sidebar-foot { padding-top: 10px; margin-top: 4px; border-top: 1px solid var(--lh-nav-line); }
+
+/* แบรนด์ */
+.lh-brand {
+  display: flex; align-items: center; gap: 12px;
+  padding: 0 8px 18px; margin-bottom: 14px;
+  border-bottom: 1px solid var(--lh-nav-line);
+  color: #fff !important; text-decoration: none !important;
+}
+.lh-brand img { width: 36px; height: 36px; border-radius: 8px; flex-shrink: 0; box-shadow: 0 4px 12px rgba(214, 40, 40, .35); }
+.lh-brand-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.lh-brand-name { font-weight: 600; font-size: 1rem; letter-spacing: .02em; }
+.lh-brand-sub  { font-size: .72rem; color: var(--lh-nav-muted); letter-spacing: .12em; text-transform: uppercase; }
+
+/* โปรไฟล์เป็นการ์ด */
+.lh-sidebar .lh-nav-profile,
+.lh-drawer .lh-nav-profile {
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid var(--lh-nav-line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 18px;
+  transition: background-color .15s, border-color .15s;
+}
+.lh-sidebar .lh-nav-profile:hover,
+.lh-drawer .lh-nav-profile:hover { background: rgba(255, 255, 255, .09); border-color: rgba(255, 255, 255, .14); }
+.lh-nav-avatar { width: 38px; height: 38px; box-shadow: 0 0 0 2px #141414, 0 0 0 4px var(--lh-brand-600, #d62828); }
+.lh-nav-profile-name { font-size: .95rem; }
+.lh-nav-profile-sub { font-size: .75rem; }
+.lh-nav-profile .bi-chevron-right { font-size: .8rem; color: var(--lh-nav-muted); transition: transform .15s; }
+.lh-nav-profile:hover .bi-chevron-right { transform: translateX(2px); color: #fff; }
+
+/* หัวข้อกลุ่ม: ตัวเล็ก + เส้นต่อท้าย */
+.lh-nav-section + .lh-nav-section { margin-top: 18px; }
+.lh-nav-heading {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 12px 6px;
+  font-size: .72rem; font-weight: 500; letter-spacing: .08em;
+  color: var(--lh-nav-muted);
+}
+.lh-nav-heading::after { content: ""; flex: 1; height: 1px; background: var(--lh-nav-line); }
+
+/* รายการเมนู: กระชับ ตัวบาง ไอคอนเทา */
+.lh-nav-list { gap: 2px; }
+.lh-nav-link {
+  position: relative;
+  min-height: 42px;
+  padding: 8px 12px;
+  gap: 12px;
+  border-radius: 10px;
+  font-size: .92rem; font-weight: 400;
+  color: #e6e6e6 !important;
+  transition: background-color .15s, color .15s;
+}
+.lh-nav-link i { width: 20px; font-size: 1.05rem; color: var(--lh-nav-icon); transition: color .15s, transform .15s; }
+.lh-nav-link:hover { background: var(--lh-nav-hover); color: #fff !important; }
+.lh-nav-link:hover i { color: #fff; transform: scale(1.08); }
+
+.lh-nav-link.is-active {
+  background: linear-gradient(90deg, var(--lh-brand-600, #d62828), #b82020);
+  color: #fff !important; font-weight: 500;
+  box-shadow: 0 6px 16px rgba(214, 40, 40, .35);
+}
+.lh-nav-link.is-active i { color: #fff; }
+.lh-nav-link.is-active::before {           /* แถบขาวเล็กด้านซ้าย */
+  content: ""; position: absolute; left: 0; top: 10px; bottom: 10px;
+  width: 3px; border-radius: 0 3px 3px 0; background: #fff;
+}
+
+/* ตัวเลข: เทาเข้มเป็นค่าเริ่ม แดงเฉพาะงานด่วน */
+.lh-nav-count {
+  min-width: 26px; height: 20px; padding: 0 7px;
+  background: rgba(255, 255, 255, .1); color: #e6e6e6;
+  font-size: .72rem; font-weight: 500;
+}
+.lh-nav-count.is-urgent { background: var(--lh-brand-600, #d62828); color: #fff; box-shadow: 0 0 0 3px rgba(214, 40, 40, .2); }
+.lh-nav-link.is-active .lh-nav-count { background: rgba(255, 255, 255, .25); color: #fff; box-shadow: none; }
+
+/* ออกจากระบบ */
+.lh-nav-link.is-danger { color: #f5a3a3 !important; }
+.lh-nav-link.is-danger i { color: #f5a3a3; }
+.lh-nav-link.is-danger:hover { background: rgba(214, 40, 40, .15); color: #fff !important; }
+.lh-nav-link.is-danger:hover i { color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lh-nav-link, .lh-nav-link i, .lh-nav-profile, .lh-nav-profile .bi-chevron-right { transition: none; }
+}

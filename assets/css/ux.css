@@ -1,0 +1,231 @@
+/* =====================================================================
+   Landy Home Ticket - UX layer สำหรับหน้าเดิมทุกหน้า (โหลดผ่าน navbar)
+   หลักการ: "คงสีเดิม" - ป้ายสถานะ / ปุ่ม Bootstrap / หัวตารางเทา / กรอบน้ำเงิน ไม่เปลี่ยน
+            ปรับเฉพาะ layout, ระยะห่าง, มือถือ, ขนาดปุ่ม, feedback ตอนโหลด
+   ===================================================================== */
+
+/* ---------- หัวหน้า (แทน navbar "/ ชื่อหน้า") - กรอบน้ำเงินเดิม ---------- */
+.lh-legacy-header,
+.lh-page-header {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 12px;
+  margin: 4px 0 16px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #0d6efd;
+  border-radius: 8px;
+}
+.lh-legacy-header > i { font-size: 1.35rem; color: #212529; }
+.lh-legacy-title,
+.lh-page-title { margin: 0; font-size: 1.25rem; font-weight: 600; line-height: 1.3; color: #212529; }
+
+/* ---------- กล่องเนื้อหา: เดิม height:100vh + overflow → สกรอลล์ซ้อน 2 ชั้น ---------- */
+.lh-legacy-body {
+  background: #fff;
+  border: 1px solid #0d6efd;
+  border-radius: 8px;
+  padding-block: 4px 16px;
+}
+.lh-surface { border-color: #0d6efd; } /* หน้า index (design system) ใช้กรอบสีเดิม */
+
+/* ---------- ตัวกรอง ---------- */
+.lh-filter-actions { display: flex; align-items: flex-end; }
+.lh-clear-filters { white-space: nowrap; }
+
+/* ---------- ตาราง / pagination ในกล่องที่โหลดด้วย AJAX (#xxx_content) ---------- */
+[id$="content"] { scroll-margin-top: 16px; }
+[id$="content"] .table td,
+[id$="content"] .table th { vertical-align: middle; }
+
+/* เดิม .pagination { margin-left: 35% } → ล้นจอบนมือถือ */
+[id$="content"] .pagination,
+.lh-legacy-body .pagination {
+  margin-left: 0 !important;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+[id$="content"] .page-link {
+  min-width: 40px; min-height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  margin-left: 0;
+  border-radius: 8px !important;
+}
+
+/* ---------- แถบโหลด (สีน้ำเงิน primary เดิม) ---------- */
+.lh-progress {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 2000;
+  height: 3px; pointer-events: none; opacity: 0; transition: opacity .2s;
+  background: linear-gradient(90deg, transparent, #0d6efd, transparent) no-repeat;
+  background-size: 40% 100%;
+}
+html.lh-busy .lh-progress { opacity: 1; animation: lh-progress 1s linear infinite; }
+@keyframes lh-progress {
+  from { background-position: -40% 0; }
+  to   { background-position: 140% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html.lh-busy .lh-progress { animation: none; background: #0d6efd; opacity: .6; }
+}
+
+/* ---------- หน้าโหลด ---------- */
+.lh-spinner {
+  display: inline-block; width: 36px; height: 36px; flex: none;
+  border: 4px solid #dbe4f0; border-top-color: #0d6efd; border-radius: 50%;
+  animation: lh-spin .7s linear infinite;
+}
+@keyframes lh-spin { to { transform: rotate(360deg); } }
+
+/* เปิดหน้าอื่น: overlay เต็มจอ (กันกดซ้ำระหว่างรอ server) */
+.lh-page-loader {
+  position: fixed; inset: 0; z-index: 2100;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255, 255, 255, .6);
+  opacity: 0; visibility: hidden; transition: opacity .15s, visibility .15s;
+}
+.lh-page-loader.is-on { opacity: 1; visibility: visible; }
+.lh-page-loader-box {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 24px; border-radius: 12px;
+  background: #fff; box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+  font-size: 1rem; font-weight: 500; color: #212529;
+}
+
+/* เปลี่ยนหน้า / กรองรายการ (AJAX): จางตาราง + spinner กลางกล่อง
+   หน่วงแสดง 150ms → คำขอที่เร็วไม่กระพริบ */
+[id$="content"].lh-loading { position: relative; min-height: 120px; }
+[id$="content"].lh-loading > * { opacity: .45; transition: opacity .15s .15s; }
+[id$="content"].lh-loading::after {
+  content: ""; position: absolute; z-index: 5;
+  top: min(50%, 160px); left: 50%; width: 40px; height: 40px; margin: -20px 0 0 -20px;
+  border: 4px solid #dbe4f0; border-top-color: #0d6efd; border-radius: 50%;
+  animation: lh-spin .7s linear infinite, lh-delay-in .15s .15s both;
+}
+@keyframes lh-delay-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .lh-spinner, [id$="content"].lh-loading::after { animation-duration: 2s; }
+}
+
+/* ---------- เนื้อหาที่โหลดผ่าน AJAX เฟดเข้าแทนการโผล่มาทันที ---------- */
+.lh-fade-in { animation: lh-content-fade .3s ease-out; }
+@keyframes lh-content-fade { from { opacity: .3; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .lh-fade-in { animation: none; } }
+
+/* ---------- มือถือ ---------- */
+@media (max-width: 767.98px) {
+  .lh-progress { top: calc(56px + env(safe-area-inset-top, 0px)); }
+  [id$="content"] { scroll-margin-top: calc(72px + env(safe-area-inset-top, 0px)); }
+
+  .lh-legacy-header { padding: 10px 12px; margin-top: 0; }
+  .lh-legacy-title { font-size: 1.1rem; }
+  .lh-legacy-body { border-radius: 8px; padding-block: 0 8px; }
+
+  /* 16px กัน iOS ซูมหน้าเองตอนแตะช่องกรอก */
+  .form-control, .form-select { font-size: 16px; }
+  .btn-sm { min-height: 36px; }
+
+  /* ---------- ตาราง → การ์ด (ux.js ใส่ data-label ให้จาก <thead>) ---------- */
+  table.lh-stack,
+  table.lh-stack > tbody,
+  table.lh-stack > tbody > tr,
+  table.lh-stack > tbody > tr > td { display: block; width: 100%; }
+  table.lh-stack { min-width: 0 !important; border: 0 !important; background: transparent; }
+
+  table.lh-stack > thead { display: block; }
+  table.lh-stack > thead > tr.lh-stack-head { display: none; }
+  table.lh-stack > thead > tr:not(.lh-stack-head),
+  table.lh-stack > thead > tr:not(.lh-stack-head) > th { display: block; width: 100%; border: 0; text-align: left; }
+
+  table.lh-stack > tbody > tr {
+    margin: 0 0 12px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .05);
+  }
+  table.lh-stack > tbody > tr > td {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 8px 12px;
+    text-align: right !important;
+    border: 0 !important;
+    border-bottom: 1px solid #f1f3f5 !important;
+    overflow-wrap: anywhere;
+  }
+  table.lh-stack > tbody > tr > td:last-child { border-bottom: 0 !important; }
+  /* แถวแรก (Ticket ID) เป็นหัวการ์ด - เทาเดียวกับหัวตารางเดิม */
+  table.lh-stack > tbody > tr > td:first-child { background: #e9ecef; font-weight: 600; }
+  table.lh-stack > tbody > tr > td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0; max-width: 45%;
+    text-align: left; font-size: .85rem; font-weight: 600; color: #6c757d;
+  }
+  table.lh-stack > tbody > tr > td.lh-stack-full { display: block; text-align: center !important; }
+  table.lh-stack .btn { min-height: 40px; }
+}
+
+/* =====================================================================
+   SweetAlert2 popup (ทุกหน้าที่ใช้ Swal.fire) — สีตามชนิดของข้อความ + ลูกเล่นเคลื่อนไหว
+   สำเร็จ = เขียว | ผิดพลาด = แดง | เตือน = เหลืองอำพัน | ข้อมูล = น้ำเงิน | ถามยืนยัน = เทา
+   ลูกเล่นกระดาษสีพุ่งตอน "สำเร็จ" อยู่ใน ux.js (ปิดอัตโนมัติถ้าเปิด reduce motion)
+   ===================================================================== */
+.swal2-popup {
+  --swal-tone: var(--lh-gray-700, #374151);
+  --swal-soft: var(--lh-gray-50, #f9fafb);
+  font-family: 'Kanit', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  border-radius: 20px; padding: 0 1.5rem 1.75rem;
+  background: linear-gradient(180deg, var(--swal-soft) 0, #fff 170px);
+  box-shadow: 0 24px 60px rgba(17, 24, 39, .28);
+  overflow: hidden;
+}
+.swal2-popup:not(.swal2-toast)::before {   /* แถบสีบางๆ ด้านบน บอกชนิดข้อความ */
+  content: ''; display: block; height: 6px; margin: 0 -1.5rem 1.25rem;
+  background: var(--swal-tone);
+}
+.swal2-popup:has(.swal2-icon.swal2-success) { --swal-tone: var(--lh-success, #15803d); --swal-soft: var(--lh-success-50, #f0fdf4); }
+.swal2-popup:has(.swal2-icon.swal2-error)   { --swal-tone: var(--lh-danger, #b91c1c);  --swal-soft: var(--lh-brand-50, #fef2f2); }
+.swal2-popup:has(.swal2-icon.swal2-warning) { --swal-tone: #b45309; --swal-soft: #fffbeb; }
+.swal2-popup:has(.swal2-icon.swal2-info)    { --swal-tone: var(--lh-info, #1d4ed8);    --swal-soft: var(--lh-info-50, #eff6ff); }
+
+/* ไอคอน: สีตามชนิด + วงคลื่นแผ่ออกตอนสำเร็จ */
+.swal2-popup .swal2-icon.swal2-success { border-color: color-mix(in srgb, var(--swal-tone) 28%, transparent); color: var(--swal-tone); }
+.swal2-popup .swal2-icon.swal2-success [class^='swal2-success-line'] { background-color: var(--swal-tone); }
+.swal2-popup .swal2-icon.swal2-success .swal2-success-ring { border-color: color-mix(in srgb, var(--swal-tone) 28%, transparent); }
+.swal2-popup .swal2-icon.swal2-success { animation: lh-swal-ripple 1.5s ease-out .5s 2; }
+.swal2-popup .swal2-icon.swal2-error { border-color: var(--swal-tone); color: var(--swal-tone); }
+.swal2-popup .swal2-icon.swal2-error [class^='swal2-x-mark-line'] { background-color: var(--swal-tone); }
+
+.swal2-popup .swal2-title { padding: .25em 0 0; font-size: 1.6rem; font-weight: 600; color: var(--lh-gray-900, #111827); }
+.swal2-popup .swal2-html-container { margin: .6em 0 0; color: var(--lh-gray-500, #6b7280); font-size: 1.05rem; line-height: 1.5; }
+
+/* ปุ่ม: ทรงแคปซูล ยกตัวตอน hover (ถ้าหน้าไหนกำหนด confirmButtonColor เอง สีนั้นยังชนะ) */
+.swal2-popup .swal2-actions { gap: .6rem; margin-top: 1.5rem; }
+.swal2-popup .swal2-styled { border-radius: 999px; min-width: 7.5rem; padding: .65em 1.6em; font-family: inherit; font-weight: 600; font-size: 1rem; transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; }
+.swal2-popup .swal2-styled.swal2-confirm { background-color: var(--swal-tone); box-shadow: 0 6px 16px color-mix(in srgb, var(--swal-tone) 35%, transparent); }
+.swal2-popup .swal2-styled:hover { transform: translateY(-2px); filter: brightness(1.06); }
+.swal2-popup .swal2-styled:active { transform: translateY(0); filter: brightness(.96); }
+.swal2-popup .swal2-styled:focus-visible { box-shadow: 0 0 0 3px #fff, 0 0 0 5px var(--lh-focus, #2563eb); outline: 0; }
+.swal2-popup .swal2-timer-progress-bar { background: color-mix(in srgb, var(--swal-tone) 55%, transparent); }
+
+/* พื้นหลังเบลอเล็กน้อย ให้ popup เด่นขึ้น */
+.swal2-container.swal2-backdrop-show { background: rgba(17, 24, 39, .5); backdrop-filter: blur(3px); }
+
+/* เข้า/ออก: เด้งแบบสปริง; ผิดพลาด = สั่นเบาๆ */
+.swal2-popup.swal2-show { animation: lh-swal-pop .5s cubic-bezier(.2, 1.15, .3, 1) both; }
+.swal2-popup.swal2-hide { animation: lh-swal-out .18s ease-in both; }
+.swal2-popup:has(.swal2-icon.swal2-error).swal2-show { animation: lh-swal-pop .45s cubic-bezier(.2, 1.15, .3, 1) both, lh-swal-shake .45s ease-in-out .3s; }
+@keyframes lh-swal-pop   { 0% { opacity: 0; transform: translateY(24px) scale(.82); } 100% { opacity: 1; transform: none; } }
+@keyframes lh-swal-out   { to { opacity: 0; transform: translateY(8px) scale(.95); } }
+@keyframes lh-swal-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+@keyframes lh-swal-ripple {
+  0%   { box-shadow: 0 0 0 0 color-mix(in srgb, var(--swal-tone) 32%, transparent); }
+  100% { box-shadow: 0 0 0 26px transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .swal2-popup.swal2-show, .swal2-popup.swal2-hide, .swal2-popup .swal2-icon.swal2-success { animation: none !important; }
+  .swal2-popup .swal2-styled:hover { transform: none; }
+}
+@media (max-width: 575.98px) {
+  .swal2-popup:not(.swal2-toast) { width: calc(100vw - 32px); padding: 0 1.1rem 1.4rem; }
+  .swal2-popup:not(.swal2-toast)::before { margin: 0 -1.1rem 1rem; }
+  .swal2-popup .swal2-styled { min-height: 44px; }
+}
