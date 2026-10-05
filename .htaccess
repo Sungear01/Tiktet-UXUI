@@ -1,0 +1,24 @@
+RewriteEngine On
+RewriteCond %{REQUEST} !-f
+RewriteRule ^([^\.]+)$ $1.php [NC,L]
+
+# ✅ บังคับ session cookie ให้เป็น HttpOnly (+ SameSite=Lax) ทั้งเว็บในระดับ php.ini แทนที่จะ
+# แก้ทีละไฟล์ (มีไฟล์เรียก session_start() ตรงๆ อยู่ ~140 ไฟล์ นอกเหนือจาก includes/session_bootstrap.php)
+# ครอบ IfModule ไว้กันเว็บล่มถ้า server รันแบบ mod_php ชื่ออื่น หรือรันผ่าน FastCGI/CGI แทน
+# (กรณี FastCGI/CGI ให้ดู .user.ini ที่ทำหน้าที่เดียวกันแทน เพราะ php_value ใช้กับ mod_php เท่านั้น)
+<IfModule mod_php.c>
+    php_value session.cookie_httponly 1
+    php_value session.cookie_samesite "Lax"
+</IfModule>
+<IfModule php_module>
+    php_value session.cookie_httponly 1
+    php_value session.cookie_samesite "Lax"
+</IfModule>
+<IfModule mod_php7.c>
+    php_value session.cookie_httponly 1
+    php_value session.cookie_samesite "Lax"
+</IfModule>
+<IfModule mod_php8.c>
+    php_value session.cookie_httponly 1
+    php_value session.cookie_samesite "Lax"
+</IfModule>

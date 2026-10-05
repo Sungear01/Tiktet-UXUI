@@ -1,0 +1,6 @@
+<?php
+require_once __DIR__ . '/core/helpers.php'; auth_user();
+$id=$_GET['id']??''; if($id==='') json_fail('ไม่พบ ID'); $table=pick_table(['tickets','ticket','helpdesk_ticket','tb_ticket','requests']);
+$stmt=mysqli_prepare($conn,"SELECT * FROM `$table` WHERE id=? LIMIT 1"); mysqli_stmt_bind_param($stmt,'s',$id); mysqli_stmt_execute($stmt); $res=mysqli_stmt_get_result($stmt); $row=$res?mysqli_fetch_assoc($res):null; if(!$row) json_fail('ไม่พบข้อมูล',404);
+$attach=[]; $at=pick_table(['ticket_attachments','attachments','request_files','tb_ticket_file']); if(table_exists($at)){ $fk=col_exists($at,'ticket_id')?'ticket_id':(col_exists($at,'request_id')?'request_id':'ticket_id'); $stmt=mysqli_prepare($conn,"SELECT * FROM `$at` WHERE `$fk`=? ORDER BY id DESC"); mysqli_stmt_bind_param($stmt,'s',$id); mysqli_stmt_execute($stmt); $rr=mysqli_stmt_get_result($stmt); while($a=mysqli_fetch_assoc($rr)){ $path=$a['file_path']??$a['path']??$a['stored_name']??$a['file_name']??''; $attach[]=['id'=>$a['id']??'', 'file_name'=>$a['original_name']??$a['file_name']??basename($path), 'url'=>abs_url($path)]; }}
+json_ok(['id'=>$row['id']??'', 'title'=>$row['title']??$row['subject']??('Ticket #'.$id), 'detail'=>$row['detail']??$row['description']??'', 'status'=>$row['status']??'', 'created_at'=>$row['created_at']??'', 'raw'=>$row, 'attachments'=>$attach]);

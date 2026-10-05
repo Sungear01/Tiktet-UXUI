@@ -1,0 +1,89 @@
+/* =====================================================================
+   แถบด้านบน (includes/layout/topbar.php)
+   - พื้นขาว ตัดกับ sidebar ดำ → แยก "เมนู" กับ "พื้นที่ทำงาน" ชัด (เดิมดำทั้งคู่ กลืนกัน)
+   - เส้นแดงแบรนด์ด้านบน = CI เดิม (บ้านแดง) แต่ไม่แย่งสายตาจากเนื้อหา
+   - ปุ่มออกจากระบบเป็นปุ่มรอง (ไม่ใช่งานหลักของหน้า จึงไม่ใช้สีแดงทึบ)
+   ===================================================================== */
+.lh-topbar {
+  display: none;
+  align-items: center; justify-content: space-between; gap: var(--lh-space-3, 16px);
+  min-height: 60px;
+  margin-bottom: var(--lh-space-3, 16px);
+  padding: var(--lh-space-2, 8px) var(--lh-space-3, 16px);
+  background: #fff;
+  border: 1px solid var(--lh-gray-200, #e5e7eb);
+  border-top: 3px solid var(--lh-brand-600, #d62828);
+  border-radius: var(--lh-radius, 10px);
+  box-shadow: var(--lh-shadow-sm, 0 1px 2px rgba(17, 24, 39, .06));
+  font-family: var(--lh-font, 'Kanit', system-ui, sans-serif);
+  color: var(--lh-gray-900, #111827);
+}
+
+/* แสดงพร้อม sidebar เท่านั้น (เกณฑ์เดียวกับ nav.css) - จอสัมผัส/เล็กใช้ appbar */
+@media (min-width: 1024.02px) { .lh-topbar { display: flex; } }
+@media (pointer: coarse)      { .lh-topbar { display: none; } }
+/* หน้าเก่าที่ไม่มี appbar (profile/) → แสดงตั้งแต่ 768px เหมือนเดิม */
+@media (min-width: 768px)     { .lh-topbar.is-legacy { display: flex; } }
+
+/* ---------- ซ้าย: หน้าหลัก › ชื่อหน้า ---------- */
+.lh-topbar-crumb { display: flex; align-items: center; gap: var(--lh-space-2, 8px); min-width: 0; }
+.lh-topbar-home {
+  display: inline-flex; align-items: center; gap: var(--lh-space-2, 8px);
+  padding: 6px 8px; margin-left: -8px; border-radius: var(--lh-radius-sm, 6px);
+  font-size: var(--lh-text-sm, .875rem); font-weight: 500;
+  color: var(--lh-gray-500, #6b7280) !important;          /* 4.8:1 บนขาว */
+  text-decoration: none !important; white-space: nowrap;
+}
+.lh-topbar-home .bi { font-size: 1.1rem; color: var(--lh-brand-600, #d62828); }
+.lh-topbar-home:hover { background: var(--lh-gray-100, #f3f4f6); color: var(--lh-gray-900, #111827) !important; }
+.lh-topbar-sep { font-size: .75rem; color: var(--lh-gray-500, #6b7280); }
+.lh-topbar-title {
+  font-size: var(--lh-text-lg, 1.25rem); font-weight: 600; line-height: 1.3;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* ---------- ขวา: วันที่ / ผู้ใช้ / ออกจากระบบ ---------- */
+.lh-topbar-end { display: flex; align-items: center; gap: var(--lh-space-3, 16px); flex-shrink: 0; }
+.lh-topbar-date {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--lh-text-sm, .875rem); color: var(--lh-gray-500, #6b7280); white-space: nowrap;
+}
+
+.lh-topbar-user {
+  display: flex; align-items: center; gap: var(--lh-space-2, 8px);
+  padding: 4px 0 4px var(--lh-space-3, 16px);
+  border-left: 1px solid var(--lh-gray-200, #e5e7eb);
+  color: var(--lh-gray-900, #111827) !important; text-decoration: none !important;
+}
+a.lh-topbar-user:hover .lh-topbar-user-name { color: var(--lh-brand-700, #a61c1c); }
+.lh-topbar-user img {
+  width: 32px; height: 32px; border-radius: 50%; object-fit: cover;
+  background: var(--lh-gray-100, #f3f4f6); box-shadow: 0 0 0 2px #fff, 0 0 0 3px var(--lh-gray-200, #e5e7eb);
+}
+.lh-topbar-user-text { display: flex; flex-direction: column; line-height: 1.25; max-width: 180px; }
+.lh-topbar-user-name { font-size: var(--lh-text-sm, .875rem); font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lh-topbar-user-sub  { font-size: .75rem; color: var(--lh-gray-500, #6b7280); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.lh-topbar-logout {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 40px; padding: 0 14px;
+  border: 1px solid var(--lh-gray-200, #e5e7eb); border-radius: var(--lh-radius, 10px);
+  background: #fff;
+  font-size: var(--lh-text-sm, .875rem); font-weight: 500;
+  color: var(--lh-gray-700, #374151) !important; text-decoration: none !important; white-space: nowrap;
+  transition: background-color .15s, border-color .15s, color .15s;
+}
+.lh-topbar-logout:hover {
+  background: var(--lh-brand-50, #fef2f2); border-color: var(--lh-brand-100, #fde3e3);
+  color: var(--lh-brand-700, #a61c1c) !important;          /* 7.5:1 */
+}
+
+.lh-topbar a:focus-visible { outline: 3px solid var(--lh-focus, #2563eb); outline-offset: 2px; }
+
+/* โน้ตบุ๊กจอเล็ก: ซ่อนวันที่ก่อน แล้วค่อยย่อชื่อ app ให้เหลือไอคอน */
+@media (max-width: 1280px) {
+  .lh-topbar-date { display: none; }
+}
+@media (max-width: 1100px) {
+  .lh-topbar-home span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+}

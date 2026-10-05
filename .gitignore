@@ -1,0 +1,37 @@
+# --- Secrets / DB credentials ---
+Apache-or-CRT-PEM-Format/
+*.key
+*.pem
+*.crt
+.env
+.env.*
+mobile_api/core/config.php
+.user.ini
+
+# --- Database dumps ---
+*.sql
+*.sql.gz
+*.sqlite
+*.db
+
+# --- User uploads & runtime data ---
+file/
+file_success/
+file_sucess/
+profile/img_user/
+backups/
+*.zip
+*.bak
+*.before
+
+# --- OS / editor junk ---
+.DS_Store
+Thumbs.db
+*.log
+!qhlogs.doc
+
+# --- Scratch copies ---
+index copy.php
+indextest.php
+logintest.php
+vendor/

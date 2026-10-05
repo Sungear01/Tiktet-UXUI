@@ -1,0 +1,601 @@
+/* =====================================================================
+   Landy Home Ticket - Components (โหลดหลัง Bootstrap และ tokens.css)
+   ใช้ prefix .lh- ทั้งหมด เพื่อไม่ชนกับ CSS เก่าใน layout/style.css
+   ===================================================================== */
+
+/* ปุ่ม Bootstrap ใช้สีเดิมของระบบ (primary น้ำเงิน) - ไม่ override */
+
+/* ---------- ฟอนต์เดียวทั้งระบบ: Kanit ----------
+   ตั้งตรงที่ body + ช่องกรอก/ปุ่ม (browser ไม่ให้ช่องกรอกสืบทอดฟอนต์เอง)
+   ใช้ html body (specificity สูงกว่า) เพราะ ticket/navbar.php โหลด bootstrap.min.css ซ้ำกลาง <body>
+   หลัง app.css ซึ่งรีเซ็ต body กลับเป็นฟอนต์ระบบ ถ้าใช้ selector เท่ากันจะแพ้ */
+:root:root { --bs-body-font-family: var(--lh-font); --bs-font-sans-serif: var(--lh-font); }
+html body,
+html body :is(button, input, select, textarea, optgroup, .modal, .dropdown-menu, .tooltip, .popover, .swal2-popup) {
+  font-family: var(--lh-font, 'Kanit', system-ui, sans-serif);
+}
+
+/* ---------- Accessibility: focus ที่มองเห็นได้ (WCAG 2.4.7) ---------- */
+:focus-visible {
+  outline: 3px solid var(--lh-focus);
+  outline-offset: 2px;
+}
+.lh-skip-link {
+  position: absolute; left: var(--lh-space-3); top: -48px;
+  background: var(--lh-gray-900); color: #fff;
+  padding: var(--lh-space-2) var(--lh-space-3); border-radius: var(--lh-radius-sm);
+  z-index: 2000;
+}
+.lh-skip-link:focus { top: var(--lh-space-2); color: #fff; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* ---------- Page header (แทน navbar ขอบน้ำเงิน "/ งานเข้าใหม่") ---------- */
+.lh-page-header {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: var(--lh-space-3);
+  margin-bottom: var(--lh-space-4);
+}
+.lh-page-title { font-size: var(--lh-text-xl); font-weight: 600; margin: 0; }
+.lh-breadcrumb { font-size: var(--lh-text-sm); color: var(--lh-gray-500); margin: 0 0 var(--lh-space-1); }
+
+/* ---------- Surface: การ์ดพื้นขาว (แทนกรอบ border:1px solid blue) ---------- */
+.lh-surface {
+  background: var(--lh-gray-0);
+  border: 1px solid var(--lh-gray-200);
+  border-radius: var(--lh-radius-lg);
+  box-shadow: var(--lh-shadow-sm);
+  padding: var(--lh-space-4);
+}
+.lh-surface + .lh-surface { margin-top: var(--lh-space-4); }
+
+/* ---------- Filter bar ---------- */
+.lh-filters { display: grid; gap: var(--lh-space-3); grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.lh-filters .form-label { font-size: var(--lh-text-sm); font-weight: 500; color: var(--lh-gray-700); }
+
+/* ---------- Table: การ์ดขาว + หัวตารางแบบ dashboard มืออาชีพ ---------- */
+/* ห่อ .table-responsive ที่มีตาราง design-system ด้วยการ์ด โดยไม่ต้องแก้ทุกไฟล์ data/*.php */
+.table-responsive:has(> table.lh-table) {
+  background: var(--lh-gray-0);
+  border: 1px solid var(--lh-gray-200);
+  border-radius: var(--lh-radius-lg);
+  box-shadow: var(--lh-shadow-sm);
+  padding: var(--lh-space-2);
+}
+.lh-table { margin: 0; font-size: .875rem; }
+.lh-table thead th {
+  background: var(--lh-gray-50); color: var(--lh-gray-500);
+  font-size: .72rem; font-weight: 700; white-space: nowrap;
+  text-transform: uppercase; letter-spacing: .04em;
+  border-bottom: 2px solid var(--lh-gray-200);
+  padding: var(--lh-space-3);
+}
+.lh-table td { padding: var(--lh-space-3); vertical-align: middle; border-color: var(--lh-gray-100); }
+/* สลับสีแถว (zebra) + hover: เฉพาะตอนแสดงเป็นตารางจริง (จอ >= 768px) กันชนกับพื้นการ์ดขาวตอนเป็น mobile stack */
+@media (min-width: 768px) {
+  .lh-table tbody tr:nth-child(even) { background: var(--lh-gray-50); }
+  .lh-table tbody tr:hover { background: rgba(214, 40, 40, .045); }
+}
+/* เลขที่ใบงาน: ใช้โทนน้ำเงิน (--lh-focus) แทนสีแบรนด์แดง เพราะแถวที่เลยกำหนด (table-danger)
+   และป้ายสถานะ "ปฏิเสธ" ก็แดงอยู่แล้ว - ถ้าเลขใบงานแดงด้วยจะซ้ำสีกันจนแยกไม่ออกว่าอันไหนคือสถานะ */
+.lh-table .lh-col-id { font-variant-numeric: tabular-nums; }
+.lh-table .lh-col-id .btn-link { font-weight: 700; color: var(--lh-focus); }
+.lh-table .lh-col-id .btn-link:hover { color: var(--lh-focus-700); }
+
+/* ป้ายรอง (เช่น "รอส่งซ่อม"): เป็นกลาง ไม่ใช่ error/success แต่ยังอ่านง่าย */
+.lh-badge-pending {
+  display: inline-flex; align-items: center; gap: 4px;
+  background: var(--lh-gray-100); color: var(--lh-gray-700);
+  font-weight: 600; font-size: .75rem; padding: 5px 10px; border-radius: 999px;
+}
+
+/* ---------- Mobile: ตารางกลายเป็นการ์ด (ใส่ data-label ใน <td>) ---------- */
+@media (max-width: 767.98px) {
+  .lh-table-stack thead { display: none; }
+  .lh-table-stack tr {
+    display: block; border: 1px solid var(--lh-gray-200); border-radius: var(--lh-radius);
+    margin-bottom: var(--lh-space-3); padding: var(--lh-space-2) var(--lh-space-3);
+    background: var(--lh-gray-0);
+  }
+  .lh-table-stack td {
+    display: flex; justify-content: space-between; gap: var(--lh-space-3);
+    border: 0; padding: var(--lh-space-1) 0; text-align: right;
+  }
+  .lh-table-stack td[data-label]::before {
+    content: attr(data-label); color: var(--lh-gray-500); font-size: var(--lh-text-sm); text-align: left;
+    flex-shrink: 0;
+  }
+  /* ช่องปุ่ม (ไม่มี data-label): ปุ่มเต็มความกว้าง กดง่ายบนมือถือ (touch target ≥ 44px) */
+  .lh-table-stack td:not([data-label]) { display: block; padding-top: var(--lh-space-2); }
+  .lh-table-stack td:not([data-label]) .btn { width: 100%; min-height: 44px; }
+
+  /* แถวเลยกำหนด (table-danger): Bootstrap ระบายสีที่ <td> ทำให้สีไม่เต็มการ์ด (ติดขอบใน padding ของการ์ด)
+     → ย้ายสีมาที่การ์ดทั้งใบ + แถบแดงด้านซ้าย ส่วนข้อความ "วันที่เกิน Target" ยังบอกซ้ำเสมอ ไม่พึ่งสีอย่างเดียว */
+  .lh-table-stack tr.table-danger {
+    background: var(--lh-brand-50); border-color: var(--lh-brand-100);
+    border-left: 4px solid var(--lh-danger);
+  }
+  .lh-table-stack tr.table-danger > td { background: transparent; box-shadow: none; }
+}
+
+/* ---------- ปุ่ม action ในตาราง: กดง่าย เห็นชัด มี feedback ตอน hover/focus ---------- */
+.lh-table td .btn-sm {
+  border-radius: var(--lh-radius-sm);
+  font-weight: 500;
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+}
+.lh-table td .btn-sm:hover,
+.lh-table td .btn-sm:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: var(--lh-shadow-sm);
+  filter: brightness(1.06);
+}
+.lh-table td .btn-sm:active { transform: translateY(0); filter: brightness(.96); }
+/* กลุ่มปุ่มหลายปุ่มในเซลล์เดียว: เว้นระยะสม่ำเสมอทั้งแนวนอน/แนวตั้ง (ตอนขึ้นบรรทัดใหม่) */
+.lh-table td .d-flex.gap-1 { row-gap: var(--lh-space-1); }
+
+/* ---------- Status badge: สี + ไอคอน + ข้อความ (ไม่พึ่งสีอย่างเดียว WCAG 1.4.1) ---------- */
+/* ทุกป้ายสถานะ: มีลาย "shine" วิ่งผ่านพื้นหลังตลอด (หยุดอัตโนมัติถ้าเปิด prefers-reduced-motion) —
+   ใช้ชั้น background-image ทับสีเดิมของแต่ละสถานะ (background-color) เพื่อให้สีที่ใช้ทั่วระบบไม่เปลี่ยน */
+@keyframes lh-status-shine {
+  0%   { background-position: -60% 0; }
+  100% { background-position: 160% 0; }
+}
+@keyframes lh-status-new-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(11, 165, 197, .45); }
+  50%      { box-shadow: 0 0 0 6px rgba(11, 165, 197, 0); }
+}
+.lh-status {
+  display: inline-flex; align-items: center; gap: var(--lh-space-1);
+  padding: 6px 14px; border-radius: 999px;
+  font-size: .8rem; font-weight: 600; line-height: 1.4; white-space: nowrap;
+  background-repeat: no-repeat;
+  background-image: linear-gradient(100deg,
+    rgba(255,255,255,0) 0%, rgba(255,255,255,0) 40%,
+    rgba(255,255,255,.6) 50%,
+    rgba(255,255,255,0) 60%, rgba(255,255,255,0) 100%);
+  background-size: 250% 100%;
+  animation: lh-status-shine 2.6s linear infinite;
+}
+.lh-status--new       { background-color: var(--lh-st-new-bg);      color: var(--lh-st-new-fg);
+  animation: lh-status-shine 2.6s linear infinite, lh-status-new-pulse 1.8s ease-in-out infinite; }
+.lh-status--approve   { background-color: var(--lh-st-approve-bg);  color: var(--lh-st-approve-fg); }
+.lh-status--waiting   { background-color: var(--lh-st-waiting-bg);  color: var(--lh-st-waiting-fg); }
+.lh-status--progress  { background-color: var(--lh-st-progress-bg); color: var(--lh-st-progress-fg); }
+.lh-status--done      { background-color: var(--lh-st-done-bg);     color: var(--lh-st-done-fg); }
+.lh-status--closed    { background-color: var(--lh-st-closed-bg);   color: var(--lh-st-closed-fg); }
+.lh-status--reject    { background-color: var(--lh-st-reject-bg);   color: var(--lh-st-reject-fg); }
+.lh-status--approvein { background-color: var(--lh-st-approvein-bg); color: var(--lh-st-approvein-fg); }
+.lh-status--other     { background-color: var(--lh-st-other-bg);    color: var(--lh-st-other-fg); }
+
+/* ---------- Count pill ในเมนู: ปกติสีเทาโปร่ง / แดงเฉพาะงานเร่งด่วน ---------- */
+.lh-count {
+  display: inline-flex; min-width: 24px; height: 20px; padding: 0 var(--lh-space-2);
+  align-items: center; justify-content: center; border-radius: 999px;
+  font-size: .75rem; font-weight: 600; font-variant-numeric: tabular-nums;
+  background: rgba(255, 255, 255, .16); color: #fff;
+}
+.lh-count--urgent { background: var(--lh-brand-600); color: #fff; }
+
+/* ---------- Empty state (ใช้ข้อความเดียวกันทั้งระบบ) ---------- */
+.lh-empty { text-align: center; padding: var(--lh-space-6) var(--lh-space-3); color: var(--lh-gray-500); }
+.lh-empty i { font-size: 2.5rem; display: block; margin-bottom: var(--lh-space-2); }
+.lh-empty-title { color: var(--lh-gray-900); font-weight: 600; margin-bottom: var(--lh-space-1); }
+
+/* ---------- Detail modal (lh-detail): อ่านรายละเอียดใบงาน แบบ label เล็ก + ค่าเด่น ---------- */
+/* ใช้ร่วมกับ Bootstrap modal: .modal-dialog.lh-detail > .modal-content > .lh-detail-head + .modal-body.lh-detail-body */
+.lh-detail .modal-content {
+  border: 0; border-radius: var(--lh-radius-lg); overflow: hidden;
+  box-shadow: 0 16px 40px rgba(17, 24, 39, .22);
+}
+.lh-detail-head {
+  display: flex; align-items: center; gap: var(--lh-space-3);
+  padding: var(--lh-space-3) var(--lh-space-4);
+  background: var(--lh-gray-0); border-bottom: 1px solid var(--lh-gray-200);
+}
+.lh-detail-eyebrow { font-size: var(--lh-text-sm); color: var(--lh-gray-500); line-height: 1.3; }
+.lh-detail-id {
+  font-size: var(--lh-text-xl); font-weight: 600; color: var(--lh-gray-900);
+  line-height: 1.3; font-variant-numeric: tabular-nums;
+}
+.lh-detail-head .lh-status { animation: none; }   /* ในโมดัลไม่ต้องกระพริบ */
+
+.lh-detail-body {
+  display: flex; flex-direction: column; gap: var(--lh-space-3);
+  padding: var(--lh-space-4); background: var(--lh-gray-50);
+}
+
+.lh-sec {
+  background: var(--lh-gray-0); border: 1px solid var(--lh-gray-200);
+  border-radius: var(--lh-radius-lg); padding: var(--lh-space-4);
+  box-shadow: var(--lh-shadow-sm);
+}
+.lh-sec-title {
+  display: flex; align-items: center; gap: var(--lh-space-2);
+  margin: 0 0 var(--lh-space-3); font-size: 1.125rem; font-weight: 600; color: var(--lh-gray-900);
+}
+.lh-sec-icon {
+  display: inline-grid; place-items: center; width: 32px; height: 32px; flex: none;
+  border-radius: 50%; background: var(--lh-gray-100); color: var(--lh-gray-700);
+}
+.lh-sec--danger { background: var(--lh-brand-50); border-color: var(--lh-brand-100); }
+.lh-sec--danger .lh-sec-icon { background: var(--lh-brand-100); color: var(--lh-danger); }
+.lh-sec--danger .lh-sec-title { color: var(--lh-danger); }
+
+.lh-fields {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--lh-space-3) var(--lh-space-4);
+}
+.lh-field { min-width: 0; }
+.lh-field--full { grid-column: 1 / -1; }
+.lh-label {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 2px;
+  font-size: var(--lh-text-sm); color: var(--lh-gray-500);   /* 4.8:1 บนขาว ผ่าน AA */
+}
+.lh-value { color: var(--lh-gray-900); line-height: 1.5; overflow-wrap: anywhere; }
+.lh-value:empty::before { content: '-'; color: var(--lh-gray-500); }
+.lh-value--lead { font-size: 1.125rem; font-weight: 500; }
+.lh-value--box {
+  min-height: 3.5rem; padding: var(--lh-space-2) var(--lh-space-3);
+  background: var(--lh-gray-50); border: 1px solid var(--lh-gray-200);
+  border-radius: var(--lh-radius); white-space: pre-wrap;
+}
+.lh-sec--danger .lh-value--box { background: var(--lh-gray-0); border-color: var(--lh-brand-100); }
+
+.lh-attach { display: flex; align-items: center; flex-wrap: wrap; gap: var(--lh-space-2) var(--lh-space-3); }
+.lh-attach-note { color: var(--lh-gray-500); font-size: var(--lh-text-sm); overflow-wrap: anywhere; }
+
+.lh-score-table thead th {
+  font-size: var(--lh-text-sm); font-weight: 600; color: var(--lh-gray-500);
+  background: var(--lh-gray-50); border-bottom: 1px solid var(--lh-gray-200);
+}
+.lh-score-table tfoot td { border-top: 1px solid var(--lh-gray-200); background: var(--lh-gray-50); }
+
+@media (max-width: 767.98px) {
+  .lh-fields { grid-template-columns: minmax(0, 1fr); }
+  .lh-detail-head { padding: var(--lh-space-3); }
+  .lh-detail-body { padding: var(--lh-space-3); }
+  .lh-sec { padding: var(--lh-space-3); }
+}
+
+/* ---------- Legacy detail modal skin ----------
+   โมดัลรายละเอียดแบบเก่า (fieldset + input readonly) ในหน้าที่ยังไม่ได้เปลี่ยน markup
+   ให้หน้าตาเหมือน lh-detail โดยไม่ต้องแก้ HTML/JS ของแต่ละหน้า (ค่า id และ class เดิมยังใช้งานได้ครบ)
+   ไม่มีผลกับโมดัลที่ใช้ .lh-detail อยู่แล้ว */
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) .modal-content {
+  border: 0; border-radius: var(--lh-radius-lg);
+  box-shadow: 0 16px 40px rgba(17, 24, 39, .22);
+}
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) .modal-header {
+  background: var(--lh-gray-0) !important; color: var(--lh-gray-900) !important;
+  border-bottom: 1px solid var(--lh-gray-200);
+  border-radius: var(--lh-radius-lg) var(--lh-radius-lg) 0 0;
+  padding: var(--lh-space-3) var(--lh-space-4);
+}
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) .modal-title {
+  font-size: var(--lh-text-xl); font-weight: 600; color: var(--lh-gray-900);
+}
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) .btn-close-white { filter: none; }
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) .modal-body {
+  background: var(--lh-gray-50); padding: var(--lh-space-4);
+}
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) .modal-body:last-child {
+  border-radius: 0 0 var(--lh-radius-lg) var(--lh-radius-lg);
+}
+
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset.border {
+  background: var(--lh-gray-0); border: 1px solid var(--lh-gray-200) !important;
+  border-radius: var(--lh-radius-lg) !important; padding: var(--lh-space-4) !important;
+  margin-bottom: var(--lh-space-3) !important; box-shadow: var(--lh-shadow-sm);
+}
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset.border > legend {
+  display: flex; align-items: center; gap: var(--lh-space-2);
+  float: left !important; width: 100% !important;   /* อยู่ในการ์ด ไม่คร่อมเส้นขอบ */
+  padding: 0 !important; margin: 0 0 var(--lh-space-3);
+  font-size: 1.125rem; font-weight: 600; color: var(--lh-gray-900) !important;
+}
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset.border > legend + * { clear: both; }
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset.border > legend > i {
+  display: inline-grid; place-items: center; width: 32px; height: 32px; flex: none;
+  border-radius: 50%; background: var(--lh-gray-100); color: var(--lh-gray-700) !important;
+}
+
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset .mb-2,
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset .mb-3 {
+  margin-bottom: var(--lh-space-3) !important;
+}
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset .form-label {
+  display: inline-flex; align-items: center; gap: 6px; margin-bottom: 2px;
+  font-size: var(--lh-text-sm); font-weight: 400 !important; color: var(--lh-gray-500);
+}
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset input.form-control[readonly] {
+  display: block; width: 100%; height: auto; min-height: 0; padding: 0;
+  background: transparent !important; border: 0; box-shadow: none; border-radius: 0;
+  color: var(--lh-gray-900); font-size: 1rem; line-height: 1.5;
+  text-overflow: ellipsis;
+}
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset textarea.form-control[readonly] {
+  padding: var(--lh-space-2) var(--lh-space-3); resize: none;
+  background: var(--lh-gray-50) !important; border: 1px solid var(--lh-gray-200);
+  border-radius: var(--lh-radius); box-shadow: none; color: var(--lh-gray-900); line-height: 1.5;
+}
+@media (max-width: 767.98px) {
+  :is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) .modal-body { padding: var(--lh-space-3); }
+  :is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset.border { padding: var(--lh-space-3) !important; }
+}
+
+/* ---------- สีแยกกลุ่มข้อมูลในโมดัลรายละเอียด ----------
+   น้ำเงิน = ข้อมูลการ Request | เขียว = ข้อมูลการรับงาน | แดง = ยกเลิก/ไม่อนุมัติ
+   สีเป็นเพียงตัวช่วยแยกกลุ่ม ชื่อหัวข้อ + ไอคอนยังบอกความหมายเสมอ (ไม่พึ่งสีอย่างเดียว) */
+.lh-sec, :is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset.border {
+  --sec-pad: var(--lh-space-4);
+  --sec-accent: var(--lh-gray-700); --sec-50: var(--lh-gray-50); --sec-100: var(--lh-gray-100);
+}
+.lh-sec--info, :is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset.border:has(> legend.text-primary) {
+  --sec-accent: var(--lh-info); --sec-50: var(--lh-info-50); --sec-100: var(--lh-info-100);
+}
+.lh-sec--success, :is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset.border:has(> legend.text-success) {
+  --sec-accent: var(--lh-success); --sec-50: var(--lh-success-50); --sec-100: var(--lh-success-100);
+}
+.lh-sec--danger { --sec-accent: var(--lh-danger); --sec-50: var(--lh-brand-50); --sec-100: var(--lh-brand-100); }
+
+/* การ์ด: แถบสีด้านบน + แถบหัวข้อพื้นอ่อนของกลุ่มนั้น */
+.lh-sec { overflow: hidden; border-top: 4px solid var(--sec-accent); padding: 0 var(--sec-pad) var(--sec-pad); }
+/* กันการ์ดถูก flex บีบจนเนื้อหาแถวสุดท้ายโดนตัด (modal-dialog-scrollable จำกัดความสูง body) — ให้ body เลื่อนแทน */
+.lh-detail-body > * { flex-shrink: 0; }
+.lh-sec-title {
+  margin: 0 calc(-1 * var(--sec-pad)) var(--lh-space-3); padding: var(--lh-space-3) var(--sec-pad);
+  background: var(--sec-50); border-bottom: 1px solid var(--sec-100); color: var(--sec-accent);
+}
+.lh-sec-icon { background: var(--sec-100); color: var(--sec-accent); }
+.lh-sec:not(.lh-sec--danger) .lh-value--box { background: var(--sec-50); border-color: var(--sec-100); }
+
+/* เส้นคั่นบางๆ ระหว่างข้อมูลแต่ละรายการ ให้สายตาแยกแถวได้ */
+.lh-field { padding-bottom: var(--lh-space-2); border-bottom: 1px solid var(--lh-gray-100); }
+.lh-sec--danger .lh-field { border-bottom-color: var(--lh-brand-100); }
+
+/* โมดัลแบบเก่า (fieldset) ใช้กติกาเดียวกัน */
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset.border {
+  overflow: hidden; border-top: 4px solid var(--sec-accent) !important;
+  padding: 0 var(--sec-pad) var(--sec-pad) !important;
+}
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset.border > legend {
+  width: calc(100% + 2 * var(--sec-pad)) !important; margin: 0 calc(-1 * var(--sec-pad)) var(--lh-space-3);
+  padding: var(--lh-space-3) var(--sec-pad) !important;
+  background: var(--sec-50); border-bottom: 1px solid var(--sec-100);
+  color: var(--sec-accent) !important;
+}
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset.border > legend > i {
+  background: var(--sec-100); color: var(--sec-accent) !important;
+}
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset textarea.form-control[readonly] {
+  background: var(--sec-50) !important; border-color: var(--sec-100);
+}
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset .mb-2,
+:is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset .mb-3 {
+  padding-bottom: var(--lh-space-2); border-bottom: 1px solid var(--lh-gray-100);
+}
+@media (max-width: 767.98px) {
+  .lh-sec, :is(#confirmModal, #closeJobModal) .modal-dialog:not(.lh-detail) fieldset.border { --sec-pad: var(--lh-space-3); }
+}
+
+/* ---------- คอลัมน์ "จัดการ": ปุ่มเรียงตามความสำคัญ (หลัก > รอง > เบา) ---------- */
+/* อนุมัติ = เขียวทึบ (ทำได้/เห็นชอบ) | ไม่อนุมัติ = แดงเส้นขอบ | ยกเลิกงาน = เทาเบา (ไม่แย่งความสนใจ แต่ยังหาเจอ)
+   เดิมแดงทึบสองปุ่มติดกัน + อนุมัติเป็นสีน้ำเงิน ทำให้ไม่รู้ว่าปุ่มไหนคือปุ่มหลัก */
+.lh-actions { display: flex; flex-direction: column; gap: var(--lh-space-2); min-width: 8.5rem; }
+.lh-actions .btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 6px 12px; white-space: nowrap; font-weight: 500;
+}
+.lh-table .btn-yapprove {
+  --bs-btn-bg: var(--lh-success); --bs-btn-border-color: var(--lh-success); --bs-btn-color: var(--lh-gray-0);
+  --bs-btn-hover-bg: var(--lh-success); --bs-btn-hover-border-color: var(--lh-success); --bs-btn-hover-color: var(--lh-gray-0);
+  --bs-btn-active-bg: var(--lh-success); --bs-btn-active-border-color: var(--lh-success); --bs-btn-active-color: var(--lh-gray-0);
+}
+.lh-table .btn-disapprove {
+  --bs-btn-bg: transparent; --bs-btn-border-color: var(--lh-danger); --bs-btn-color: var(--lh-danger);
+  --bs-btn-hover-bg: var(--lh-brand-50); --bs-btn-hover-border-color: var(--lh-danger); --bs-btn-hover-color: var(--lh-danger);
+  --bs-btn-active-bg: var(--lh-brand-100); --bs-btn-active-border-color: var(--lh-danger); --bs-btn-active-color: var(--lh-danger);
+}
+.lh-table .btn-cancle {
+  --bs-btn-bg: transparent; --bs-btn-border-color: var(--lh-gray-200); --bs-btn-color: var(--lh-gray-700);
+  --bs-btn-hover-bg: var(--lh-brand-50); --bs-btn-hover-border-color: var(--lh-brand-100); --bs-btn-hover-color: var(--lh-danger);
+  --bs-btn-active-bg: var(--lh-brand-100); --bs-btn-active-border-color: var(--lh-brand-100); --bs-btn-active-color: var(--lh-danger);
+}
+
+/* จำนวนวันที่เกินกำหนด: ป้ายกลม อ่านเร็ว (มีคำว่า "วัน" ไม่พึ่งสีอย่างเดียว) */
+.lh-late {
+  display: inline-block; padding: 2px 10px; border-radius: 999px; white-space: nowrap;
+  background: var(--lh-brand-100); color: var(--lh-danger); font-weight: 600;
+}
+
+@media (min-width: 768px) {
+  /* ชื่อคน/เรื่อง: ไม่ให้บีบจนขึ้นบรรทัดทีละ 2-3 ตัวอักษร */
+  .lh-table td[data-label="เรื่อง Request"] { min-width: 9rem; }
+  .lh-table td[data-label="ผู้ Request"],
+  .lh-table td[data-label="ผู้รับ Request"] { min-width: 10rem; }
+  /* คอลัมน์จัดการ: ตรึงไว้ขอบขวา เลื่อนตารางแนวนอนแล้วปุ่มก็ยังกดได้เลย */
+  .lh-table .lh-col-actions {
+    position: sticky; right: 0; z-index: 1;
+    border-left: 1px solid var(--lh-gray-200);
+    box-shadow: -8px 0 10px -8px rgba(17, 24, 39, .18);
+  }
+}
+@media (max-width: 767.98px) {
+  /* มือถือ: ปุ่มเต็มความกว้าง กดง่าย (ไม่ใช้ป้าย label ข้างซ้ายกับปุ่ม) */
+  .lh-table-stack td.lh-col-actions { display: block; padding-top: var(--lh-space-2); }
+  .lh-table-stack td.lh-col-actions::before { display: none; }
+  .lh-actions { min-width: 0; }
+  .lh-actions .btn { min-height: 44px; }
+}
+
+/* ---------- Confirm modal (lh-confirm): หัวมีไอคอน + สรุปข้อมูลที่กำลังจะยืนยัน + ปุ่มหลัก/รอง ---------- */
+/* โครง: .modal-content.lh-confirm > .lh-confirm-head + .modal-body (.lh-confirm-summary, .lh-confirm-note) + .modal-footer */
+.lh-confirm { border: 0; border-radius: var(--lh-radius-lg); overflow: hidden; box-shadow: 0 16px 40px rgba(17, 24, 39, .22); }
+.lh-confirm-head {
+  display: flex; align-items: center; gap: var(--lh-space-3);
+  padding: var(--lh-space-3) var(--lh-space-4);
+  background: var(--lh-info-50); border-bottom: 1px solid var(--lh-info-100);
+}
+.lh-confirm-head .btn-close { margin-left: auto; align-self: flex-start; }
+.lh-confirm-icon {
+  display: grid; place-items: center; width: 44px; height: 44px; flex: none;
+  border-radius: 50%; background: var(--lh-info); color: var(--lh-gray-0); font-size: 1.2rem;
+}
+.lh-confirm-title { margin: 0; font-size: var(--lh-text-lg); font-weight: 600; color: var(--lh-gray-900); line-height: 1.3; }
+.lh-confirm-sub { font-size: var(--lh-text-sm); color: var(--lh-gray-700); }
+.lh-confirm .modal-body { padding: var(--lh-space-4); }
+.lh-confirm-summary {
+  display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--lh-space-2) var(--lh-space-4);
+  margin: 0 0 var(--lh-space-3); padding: var(--lh-space-3);
+  background: var(--lh-gray-50); border: 1px solid var(--lh-gray-200); border-radius: var(--lh-radius);
+}
+.lh-confirm-summary dt { color: var(--lh-gray-500); font-weight: 400; font-size: var(--lh-text-sm); }
+.lh-confirm-summary dd { margin: 0; color: var(--lh-gray-900); font-weight: 500; overflow-wrap: anywhere; }
+.lh-confirm-summary dd:empty::before { content: '-'; color: var(--lh-gray-500); }
+.lh-confirm-note { display: flex; gap: var(--lh-space-2); margin: 0; color: var(--lh-gray-700); font-size: var(--lh-text-sm); line-height: 1.5; }
+.lh-confirm-note i { color: var(--lh-info); margin-top: 2px; flex: none; }
+.lh-confirm .modal-footer { background: var(--lh-gray-50); border-top: 1px solid var(--lh-gray-200); gap: var(--lh-space-2); }
+.lh-confirm .modal-footer .btn { min-width: 7.5rem; min-height: 40px; border-radius: 999px; font-weight: 500; }
+.lh-btn-confirm {
+  --bs-btn-bg: var(--lh-info); --bs-btn-border-color: var(--lh-info); --bs-btn-color: var(--lh-gray-0);
+  --bs-btn-hover-bg: var(--lh-info); --bs-btn-hover-border-color: var(--lh-info); --bs-btn-hover-color: var(--lh-gray-0);
+  --bs-btn-active-bg: var(--lh-info); --bs-btn-active-border-color: var(--lh-info); --bs-btn-active-color: var(--lh-gray-0);
+  --bs-btn-disabled-bg: var(--lh-info); --bs-btn-disabled-border-color: var(--lh-info); --bs-btn-disabled-color: var(--lh-gray-0);
+  color: var(--bs-btn-color); background: var(--bs-btn-bg); border: 1px solid var(--bs-btn-border-color);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--lh-info) 30%, transparent);
+  transition: transform .15s ease, filter .15s ease;
+}
+.lh-btn-confirm:hover:not(:disabled) { transform: translateY(-1px); filter: brightness(1.08); color: var(--lh-gray-0); }
+.lh-btn-confirm:focus-visible { outline: 0; box-shadow: 0 0 0 3px var(--lh-gray-0), 0 0 0 5px var(--lh-focus); }
+/* กำลังบันทึก: วงกลมหมุนแทนไอคอน กันกดซ้ำ (ปุ่มถูก disabled อยู่แล้ว) */
+.lh-btn-confirm.is-loading i { display: none; }
+.lh-btn-confirm.is-loading::before {
+  content: ''; display: inline-block; width: 1em; height: 1em; margin-right: 6px; vertical-align: -.15em;
+  border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%;
+  animation: lh-spin .7s linear infinite;
+}
+@keyframes lh-spin { to { transform: rotate(360deg); } }
+/* โทนยืนยันการยกเลิก / ลบ: หัวแดงอ่อน + ไอคอนแดง (ปุ่มหลักใช้ .btn-danger) */
+.lh-confirm.is-danger .lh-confirm-head { background: var(--lh-brand-50); border-bottom-color: var(--lh-brand-100); }
+.lh-confirm.is-danger .lh-confirm-icon { background: var(--lh-danger); }
+.lh-confirm.is-danger .lh-confirm-note i { color: var(--lh-danger); }
+@media (prefers-reduced-motion: reduce) { .lh-btn-confirm.is-loading::before { animation-duration: 1.6s; } }
+@media (max-width: 575.98px) {
+  .lh-confirm .modal-footer .btn { flex: 1 1 0; }
+}
+
+/* ---------- การ์ดบนมือถือต้องไม่กว้างเกินจอ ---------- */
+/* ตัว <table>/<tbody> ยังเป็น display:table ทำให้ความกว้างของตารางถูกดันด้วยเซลล์ที่กำหนด min-width ไว้
+   (เช่น ช่องคะแนนประเมิน min-width:320px) การ์ดเลยล้นขอบขวา → บังคับให้เป็น block และปลด min/max-width ของเซลล์ */
+@media (max-width: 767.98px) {
+  .lh-table-stack,
+  .lh-table-stack > tbody { display: block; width: 100%; }
+  .lh-table-stack td { min-width: 0 !important; max-width: none !important; }
+}
+
+/* ---------- ปฏิทิน jQuery UI (datepicker): สกินให้เข้ากับระบบ ----------
+   ใช้ได้ทุกหน้าที่โหลด app.css หลัง jquery-ui.css
+   วันนี้ = กรอบฟ้า | วันที่เลือก = พื้นแดงแบรนด์ (ไม่พึ่งสีอย่างเดียว: ตัวหนา + รูปทรงต่างกัน)
+   ช่องวันสูง 36px กดง่าย (Fitts) | ชื่อเดือน/ปีเป็น dropdown ที่คุ้นเคย (Jakob) */
+.ui-datepicker {
+  z-index: 2000 !important;
+  width: 18.5rem; padding: var(--lh-space-3); margin-top: 6px;
+  background: var(--lh-gray-0); border: 1px solid var(--lh-gray-200) !important;
+  border-radius: var(--lh-radius-lg); box-shadow: 0 16px 40px rgba(17, 24, 39, .18);
+  font-family: inherit; font-size: .9375rem; color: var(--lh-gray-900);
+}
+.ui-datepicker .ui-datepicker-header {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  padding: 0 0 var(--lh-space-3); margin-bottom: var(--lh-space-2);
+  background: transparent; border: 0; border-bottom: 1px solid var(--lh-gray-100); border-radius: 0;
+}
+.ui-datepicker .ui-datepicker-title {
+  display: flex; gap: 6px; margin: 0 2.5rem; line-height: 1.5;
+  font-weight: 600; color: var(--lh-gray-900);
+}
+.ui-datepicker .ui-datepicker-title select {
+  width: auto; margin: 0; padding: 4px 24px 4px 10px; appearance: none; cursor: pointer;
+  font: inherit; font-size: .875rem; font-weight: 600; color: var(--lh-gray-900);
+  background: var(--lh-gray-50) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 8px center;
+  border: 1px solid var(--lh-gray-200); border-radius: var(--lh-radius-sm);
+}
+.ui-datepicker .ui-datepicker-title select:hover { border-color: var(--lh-gray-500); }
+.ui-datepicker .ui-datepicker-title select:focus { outline: none; border-color: var(--lh-focus); box-shadow: 0 0 0 3px rgba(37, 99, 235, .2); }
+
+/* ปุ่มเดือนก่อน/ถัดไป: วงกลม ใช้ลูกศรแทนไอคอนสไปรต์เดิม */
+.ui-datepicker .ui-datepicker-prev,
+.ui-datepicker .ui-datepicker-next {
+  top: 0; width: 32px; height: 32px; display: grid; place-items: center; cursor: pointer;
+  background: transparent; border: 0 !important; border-radius: 50%;
+}
+.ui-datepicker .ui-datepicker-prev { left: 0; }
+.ui-datepicker .ui-datepicker-next { right: 0; }
+.ui-datepicker .ui-datepicker-prev-hover,
+.ui-datepicker .ui-datepicker-next-hover,
+.ui-datepicker .ui-datepicker-prev:hover,
+.ui-datepicker .ui-datepicker-next:hover { top: 0; background: var(--lh-gray-100); }
+.ui-datepicker .ui-datepicker-prev-hover { left: 0; }
+.ui-datepicker .ui-datepicker-next-hover { right: 0; }
+.ui-datepicker .ui-datepicker-prev span,
+.ui-datepicker .ui-datepicker-next span { display: none; }
+.ui-datepicker .ui-datepicker-prev::before,
+.ui-datepicker .ui-datepicker-next::before {
+  content: ''; width: 8px; height: 8px;
+  border: solid var(--lh-gray-700); border-width: 0 0 2px 2px;
+}
+.ui-datepicker .ui-datepicker-prev::before { transform: translateX(2px) rotate(45deg); }
+.ui-datepicker .ui-datepicker-next::before { transform: translateX(-2px) rotate(-135deg); }
+.ui-datepicker .ui-state-disabled.ui-datepicker-prev,
+.ui-datepicker .ui-state-disabled.ui-datepicker-next { opacity: .35; cursor: default; }
+
+/* ตารางวัน */
+.ui-datepicker table { width: 100%; margin: 0; border-collapse: separate; border-spacing: 2px; font-size: inherit; }
+.ui-datepicker th {
+  padding: 4px 0 6px; font-size: .75rem; font-weight: 600; color: var(--lh-gray-500);
+}
+.ui-datepicker th:first-child { color: var(--lh-danger); }   /* อาทิตย์ */
+.ui-datepicker td { padding: 0; }
+.ui-datepicker td a.ui-state-default,
+.ui-datepicker td span.ui-state-default {
+  display: grid; place-items: center; height: 36px; padding: 0; margin: 0;
+  text-align: center; font-variant-numeric: tabular-nums;
+  color: var(--lh-gray-900); background: transparent; border: 1px solid transparent;
+  border-radius: var(--lh-radius-sm); transition: background-color .12s ease, color .12s ease;
+}
+.ui-datepicker td a.ui-state-default:hover,
+.ui-datepicker td a.ui-state-hover { background: var(--lh-gray-100); color: var(--lh-gray-900); border-color: transparent; }
+.ui-datepicker td.ui-datepicker-week-end:first-child a.ui-state-default { color: var(--lh-danger); }
+/* วันนี้ */
+.ui-datepicker td a.ui-state-highlight {
+  background: var(--lh-info-50); color: var(--lh-info); border-color: var(--lh-info-100); font-weight: 600;
+}
+/* วันที่เลือก */
+.ui-datepicker td a.ui-state-active,
+.ui-datepicker td a.ui-state-active:hover {
+  background: var(--lh-brand-600); color: var(--lh-gray-0); border-color: var(--lh-brand-600);
+  font-weight: 600; box-shadow: 0 2px 6px rgba(214, 40, 40, .35);
+}
+/* วันของเดือนอื่น / วันที่เลือกไม่ได้ */
+.ui-datepicker td.ui-datepicker-other-month a.ui-state-default { color: var(--lh-gray-500); opacity: .6; }
+.ui-datepicker td.ui-state-disabled span.ui-state-default { color: var(--lh-gray-500); opacity: .45; }
+
+/* แถบปุ่มล่าง (ถ้าเปิด showButtonPanel) */
+.ui-datepicker .ui-datepicker-buttonpane {
+  margin: var(--lh-space-2) 0 0; padding: var(--lh-space-2) 0 0; border-top: 1px solid var(--lh-gray-100);
+}
+.ui-datepicker .ui-datepicker-buttonpane button {
+  margin: 0; padding: 6px 12px; font: inherit; font-size: .875rem; font-weight: 500; opacity: 1;
+  color: var(--lh-gray-700); background: var(--lh-gray-0);
+  border: 1px solid var(--lh-gray-200); border-radius: var(--lh-radius-sm);
+}
+.ui-datepicker .ui-datepicker-buttonpane button:hover { background: var(--lh-gray-100); }
+.ui-datepicker .ui-datepicker-buttonpane button.ui-priority-primary {
+  color: var(--lh-gray-0); background: var(--lh-brand-600); border-color: var(--lh-brand-600);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-datepicker td a.ui-state-default { transition: none; }
+}
